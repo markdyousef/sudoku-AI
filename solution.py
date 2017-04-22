@@ -26,8 +26,20 @@ def naked_twins(values):
     Returns:
         the values dictionary with the naked twins eliminated from peers.
     """
-
     # Find all instances of naked twins
+    for unit in unitlist:
+        for box in unit:
+            # find twins
+            if len((values[box])) == 2:
+                for other in unit:
+                    if values[other] == values[box] and other != box:
+                        # remove twins
+                        for peer in unit:
+                            value = values[box]
+                            if values[peer] != values[box]:
+                                assign_value(values, peer, values[peer].replace(value[0],'').replace(value[1],''))
+    return values
+
     # Eliminate the naked twins as possibilities for their peers
 
 
@@ -41,6 +53,8 @@ rows = 'ABCDEFGHI'
 cols = digits
 boxes = cross(rows, cols)
 row_units = [cross(r, cols) for r in rows]
+diagonal1 = [box[0]+box[1] for box in zip(rows, cols)]
+diagonal2 = [box[0]+box[1] for box in zip(rows, cols[::-1])]
 
 column_units = [cross(rows, c) for c in cols]
 
@@ -49,9 +63,9 @@ square_units = [
     for cs in ('123', '456', '789')
     ]
 
-unitlist = row_units + column_units + square_units
+unitlist = row_units + column_units + square_units + [diagonal1] + [diagonal2]
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
-peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
+peers = dict((s, set(sum(units[s], []))-set([s])) for s in boxes)
 
 
 def grid_values(grid):
@@ -89,7 +103,6 @@ def display(values):
                       for c in cols))
         if r in 'CF':
             print(line)
-    return
 
 
 def eliminate(values):
@@ -121,6 +134,8 @@ def reduce_puzzle(values):
         values = eliminate(values)
         # Only-choice strategy
         values = only_choice(values)
+        # Naked-twins strategy
+        values = naked_twins(values)
 
         solved_values_after = len([box for box in values.keys()
                                     if len(values[box]) == 1])
